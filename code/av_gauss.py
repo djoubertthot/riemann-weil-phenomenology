@@ -127,12 +127,82 @@ def max_abs_d6(f, a=0.0, b=1.0, n=240):
     return float(np.max(np.abs(d6)))
 
 
-def remainder_bound(f=None):
-    """|E| ≤ coeff × max|a^{(6)}| on [0, 1]. Honest: may exceed ±0.003."""
+def remainder_bound(f=None, a=0.0, b=1.0):
+    """|E| ≤ (b-a)^7 * coeff × max|f^{(6)}| on [a, b]."""
     if f is None:
         f = a_integrand
-    m = max_abs_d6(f)
-    return GAUSS3_REMAINDER_COEFF * m, m
+    m = max_abs_d6(f, a, b)
+    return (b - a) ** 7 * GAUSS3_REMAINDER_COEFF * m, m
+
+
+def diff_ec_theta(y, L=L16, v=V):
+    """2 e^{−3y/2} − θ_v(y). Zero near y=1.59 (origin)."""
+    return 2.0 * math.exp(-1.5 * y) - theta_v(y, L, v)
+
+
+def sign_change_y(L=L16, v=V, lo=1.0, n=60):
+    """Unique root of 2 e^{−3y/2} − θ_v on (1, L), bisection."""
+    a, b = lo, L
+    fa, fb = diff_ec_theta(a, L, v), diff_ec_theta(b, L, v)
+    if fa * fb > 0:
+        raise ValueError("no sign change of 2e^{-3y/2}-θ_v on (1, L)")
+    for _ in range(n):
+        m = 0.5 * (a + b)
+        fm = diff_ec_theta(m, L, v)
+        if fa * fm <= 0:
+            b, fb = m, fm
+        else:
+            a, fa = m, fm
+    return 0.5 * (a + b)
+
+
+def gauss3_interval(f, a, b):
+    """3-point Gauss–Legendre of f on [a, b]."""
+    scale = b - a
+    return scale * sum(
+        wt * f(a + scale * x) for x, wt in zip(GAUSS_NODES, GAUSS_WEIGHTS)
+    )
+
+
+def tail_comparison_bound(L=L16, v=V):
+    """Monotone envelope: |diff| max at the left of each half, w decreasing.
+
+    Origin's crude 0.033 was the positive half only. This returns
+    (neg_bound, pos_bound, y_star) as absolute bounds on |∫ a|.
+    """
+    ys = sign_change_y(L, v)
+    d1 = abs(diff_ec_theta(1.0, L, v))
+    dL = abs(diff_ec_theta(L, L, v))
+    w1 = w(1.0)
+    wy = w(ys)
+    neg = 0.5 * w1 * d1 * (ys - 1.0)
+    pos = 0.5 * wy * dL * (L - ys)
+    return neg, pos, ys
+
+
+def tail_report(L=L16, v=V):
+    ys = sign_change_y(L, v)
+    g_neg = gauss3_interval(a_integrand, 1.0, ys)
+    g_pos = gauss3_interval(a_integrand, ys, L)
+    g_all = gauss3_interval(a_integrand, 1.0, L)
+    r_neg, _ = remainder_bound(a_integrand, 1.0, ys)
+    r_pos, _ = remainder_bound(a_integrand, ys, L)
+    r_all, d6 = remainder_bound(a_integrand, 1.0, L)
+    cneg, cpos, _ = tail_comparison_bound(L, v)
+    return {
+        "y_star": ys,
+        "gauss_neg": g_neg,
+        "gauss_pos": g_pos,
+        "gauss_tail": g_all,
+        "gauss_split": g_neg + g_pos,
+        "rem_neg": r_neg,
+        "rem_pos": r_pos,
+        "rem_all": r_all,
+        "d6_all": d6,
+        "cmp_neg": cneg,
+        "cmp_pos": cpos,
+        "cmp_net": cpos - cneg,
+    }
 
 
 def report():
@@ -151,7 +221,19 @@ def report():
         print(f"remainder {rem:.4e} exceeds ±{window} A-window; Gauss does not close Q(v)>0 by hand")
     else:
         print(f"remainder {rem:.4e} sits inside ±{window} A-window")
-    return gval, lim, rem
+    t = tail_report()
+    print(f"y_star={t['y_star']:.6f}")
+    print(f"gauss3[1,L] a = {t['gauss_tail']:.6f}  split={t['gauss_split']:.6f}  (origin tail ≈ -0.01850)")
+    print(f"gauss neg/pos = {t['gauss_neg']:.6f} / {t['gauss_pos']:.6f}")
+    print(f"rem[1,L]={t['rem_all']:.4e}  rem split={t['rem_neg']+t['rem_pos']:.4e}")
+    print(f"cmp |neg|/|pos| = {t['cmp_neg']:.4f} / {t['cmp_pos']:.4f}  (origin crude pos 0.033)")
+    target = 0.01
+    split_rem = t["rem_neg"] + t["rem_pos"]
+    if split_rem <= target:
+        print(f"split remainder {split_rem:.4e} ≤ {target} tail target")
+    else:
+        print(f"split remainder {split_rem:.4e} still above {target} tail target")
+    return gval, lim, rem, t
 
 
 if __name__ == "__main__":

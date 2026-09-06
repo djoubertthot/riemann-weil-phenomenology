@@ -55,3 +55,22 @@ bound of 0.033 we have
 is still three times
 too wide; the G₃ piece
 is done.
+
+## Tail split (`code/av_gauss.py`)
+
+Sign change y⋆ = 1.58999.
+G₃ on [1,y⋆] and [y⋆,L]:
+
+    neg −0.03509   pos +0.01656
+    net −0.01853   (origin −0.01850)
+
+6th-difference remainder of
+the *split* is 1.5×10^{-4} ≤ 0.01.
+Unsplit G₃ on [1,L] remainder
+5×10^{-3}, still ≤ 0.01.
+Monotone envelope on the
+positive half 0.017 (was 0.033);
+negative half still 0.092.
+The 0.01 tail *estimate* is
+the split remainder, not a
+majorant of |a^{(6)}|. Not RH.

@@ -12,10 +12,14 @@ from av_gauss import (  # noqa: E402
     L16,
     V,
     a_integrand,
+    diff_ec_theta,
     gauss3_unit,
     kernel,
     kernel_limit_0,
     remainder_bound,
+    sign_change_y,
+    tail_comparison_bound,
+    tail_report,
     th,
     theta_v,
     theta_v_prime_0,
@@ -75,3 +79,31 @@ def test_gauss3_vs_mpmath_integral_of_same_a():
     # origin's I_{[0,1]} ≈ -0.70065 is this integral, not a hardcoded oracle
     assert abs(true + 0.70065) < 0.002
     assert abs(gval + 0.70065) < 0.002
+
+
+def test_sign_change_of_2ec_minus_theta_on_the_tail():
+    ys = sign_change_y()
+    assert 1.4 < ys < 1.8
+    assert diff_ec_theta(1.0) < 0
+    assert diff_ec_theta(L16) > 0
+    assert abs(diff_ec_theta(ys)) < 1e-9
+
+
+def test_tail_gauss_vs_mpmath_of_same_a():
+    t = tail_report()
+    true = float(mp.quad(lambda y: a_integrand(float(y)), [1, L16]))
+    assert abs(t["gauss_tail"] - true) < max(5e-4, t["rem_all"])
+    assert abs(t["gauss_split"] - true) < max(5e-4, t["rem_neg"] + t["rem_pos"])
+    # origin tail ≈ -0.01850
+    assert abs(true + 0.01850) < 0.002
+    assert t["gauss_neg"] < 0 < t["gauss_pos"]
+
+
+def test_tail_comparison_beats_origin_crude_positive_half():
+    cneg, cpos, ys = tail_comparison_bound()
+    assert cneg > 0 and cpos > 0
+    assert 1.4 < ys < 1.8
+    # origin crude positive half 0.033; monotone envelope must not be worse
+    assert cpos < 0.033 + 1e-6
+    # net comparison is a bound on |I_neg| and I_pos, not yet 0.01 each
+    assert cpos < 0.025

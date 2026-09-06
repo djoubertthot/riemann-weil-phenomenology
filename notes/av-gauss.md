@@ -40,6 +40,23 @@ giving remainder ~1.6×10^{-4}, *inside* ±0.003. That estimate is
 not a majorant of |a^{(6)}|. The Gauss value is the finite arithmetic
 check; Q(v)>0 is not closed as a hand proof by this remainder.
 
+## Tail [1, L]
+
+Origin: G₃ on [0,1] plus a 0.01 bound on the tail would close A(v);
+the crude positive-half bound was 0.033. `2e^{-3y/2}−θ_v` changes
+sign at y⋆ = 1.58999 (`sign_change_y`).
+
+G₃ on each half (shipped `a_integrand`):
+
+    [1, y⋆]   −0.03509
+    [y⋆, L]   +0.01656
+    net       −0.01853   (origin −0.01850)
+
+Split remainder estimate 1.5×10^{-4} ≤ 0.01. Monotone comparison:
+positive half 0.017 (beats 0.033), negative half 0.092 (still fat).
+Same honesty as [0,1]: the 0.01 figure is a 6th-difference estimate,
+not a majorant.
+
 ## Status
 
 | piece | status |
@@ -49,4 +66,6 @@ check; Q(v)>0 is not closed as a hand proof by this remainder.
 | 3-point Gauss of a on [0,1] | arithmetic check, agrees with ∫ a |
 | rigorous |a^{(6)}| majorant | not written |
 | comparison bound of I_{[0,1]} | still open (chord misses by 0.22) |
+| G₃ tail split at y⋆ | arithmetic check; rem estimate ≤ 0.01, not a majorant |
+| monotone envelope of the tail | pos 0.017 (was 0.033); neg 0.092 still fat |
 | (∀ L) Q_L ≥ 0 | RH; not this note |

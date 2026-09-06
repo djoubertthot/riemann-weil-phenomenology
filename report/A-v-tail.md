@@ -66,6 +66,15 @@ two O(0.03) pieces.
 The remaining work is
 [0,1], not the far tail.
 
+G₃ on [0,1] is done
+(`gauss3-01.md`, `av_gauss.py`).
+Tail split at the sign change
+y⋆=1.590: G₃ net −0.01853,
+split remainder estimate
+1.5×10^{-4} ≤ 0.01. Comparison
+envelope still 0.092 on the
+negative half. Not RH.
+
 Arb enclosure of I_{[0,1]}, I_{[1,L]},
 A(v) and Q(v)>0: `notes/av-witness.md`,
 `tests/test_av_witness.py`. Comparison
